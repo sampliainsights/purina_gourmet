@@ -320,6 +320,13 @@
     @media(max-width:768px) { :root { --sidebar-w:0px } .sidebar { transform:translateX(-100%); width:240px } .sidebar.open { transform:translateX(0) } .main-area { margin-left:0 } .g2,.g3 { grid-template-columns:1fr } .topbar { padding:0 16px } .page-content { padding:16px } #dataBanner { left:16px } }
     @media(max-width:520px) { .kpi-grid { grid-template-columns:1fr 1fr } .insight-grid { grid-template-columns:1fr } }
 
+    /* ── EVALÚA BUTTON ── */
+    .btn-evalua-wrap { position:relative; border-radius:var(--r-full); padding:2px; background:#c73346; overflow:hidden }
+    .btn-evalua-wrap::before { content:''; position:absolute; inset:-100%; width:300%; height:300%; background:conic-gradient(from 0deg, transparent 0deg, transparent 120deg, rgba(255,255,255,0) 130deg, #fff 160deg, #ffb0bc 170deg, transparent 200deg, transparent 360deg); animation:evaluaBorderSpin 6s linear infinite; border-radius:inherit }
+    @keyframes evaluaBorderSpin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+    .btn-evalua { display:inline-flex; align-items:center; gap:6px; background:linear-gradient(135deg,#c73346 0%,#a02438 100%); color:#fff; font-family:'Poppins',sans-serif; font-size:11.5px; font-weight:600; padding:6px 13px; border-radius:var(--r-full); border:none; cursor:pointer; white-space:nowrap; text-decoration:none; letter-spacing:.01em; position:relative; z-index:1 }
+    .btn-evalua:hover { background:linear-gradient(135deg,#d94560 0%,#c73346 100%) }
+
     .row-gap { margin-bottom:var(--content-gap) }
     .pair-row { display:grid; grid-template-columns:1fr 1fr; gap:var(--content-gap) }
     @media(max-width:768px){ .pair-row { grid-template-columns:1fr } }
@@ -435,6 +442,12 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             Exportar PDF
           </button>
+          <div class="btn-evalua-wrap">
+            <a href="https://sampliainsights.github.io/samplia-evaluacion/" target="_blank" class="btn-evalua">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M11 5H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-5"/><polyline points="17 3 21 3 21 7"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              Evalúa tu experiencia con Samplia
+            </a>
+          </div>
           <a href="https://sampliainsights.github.io/samplia-evaluacion/" target="_blank" class="btn-eval" style="display:none;">
             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink:0"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
             Evaluación de Satisfacción
@@ -490,6 +503,7 @@
               </div>
               <div class="kpi-label">Comprarían</div>
               <div class="kpi-value" style="color:var(--green);" id="kpiCompra">—</div>
+              <div id="kpiCompraBench"></div>
               <div class="kpi-sub">"Compradores Potenciales"</div>
             </div>
             <div class="kpi-card">
@@ -664,7 +678,7 @@
     const GVIZ_URL   = `https://docs.google.com/spreadsheets/d/e/${GSHEET_PUB_KEY}/gviz/tq?gid=${GSHEET_GID}`;
     const PUBHTML_URL= `https://docs.google.com/spreadsheets/d/e/${GSHEET_PUB_KEY}/pubhtml?gid=${GSHEET_GID}&single=true`;
     const BENCH_SCORE = 7.5;
-    const BENCH_NPS   = 7.5;
+    const BENCH_NPS   = 22;
 
     let allRows=[], allHeaders=[], charts={}, COL={};
 
@@ -682,7 +696,7 @@
       { col:'aQkeqxXPqHaJBHSavnbQ', title:'¿Qué marcas de comida húmeda sueles comprarle?', type:'leaderboard_top3', showAllResponses:true, showPercentages:true },
       { col:'0MhGFlaVgBd5WEwd5AOK', title:'¿Dónde sueles comprar la comida húmeda?', type:'cross_heatmap', crossCol:'aQkeqxXPqHaJBHSavnbQ' },
       { col:'laWwwvyDHybnAYfCA8xn', title:'En general ¿Cuánto crees que le ha gustado Gourmet Soup Royale a tu gato?', type:'hbar', hideXAxis:true, pairStart:true, t2b:true, colorFn:(l)=>{const n=norm(l);if(n.includes('ni'))return'#9ca3af';if(n.includes('disgust')&&n.includes('mucho'))return'#7f1d1d';if(n.includes('disgust'))return'#7f1d1d';if(n.includes('gust')&&n.includes('mucho'))return'#1e3a8a';if(n.includes('gust'))return'#1e3a8a';return'#9ca3af';}, sortFn:(a,b)=>{function rank(l){const n=norm(l);if(n.includes('gust')&&n.includes('mucho'))return 0;if(n.includes('gust'))return 1;if(n.includes('ni'))return 2;if(n.includes('disgust')&&!n.includes('mucho'))return 3;return 4;}return rank(a)-rank(b);} },
-      { col:'9lUTyc2rDUOoWCXgOCnn', title:'¿Qué tan probable es que incluyas este producto en tu próxima compra?', type:'hbar', hideXAxis:true, pairEnd:true, colorFn:(l)=>{const n=norm(l);if(n.includes('ni ')||n.includes('quizas')||n.includes('indecis')||n.includes('tal vez'))return'#9ca3af';if(n.includes('no lo')||n.includes('no comprare')||n.includes('improbable')||(n.includes('no')&&!n.includes('probable')))return'#7f1d1d';return'#1e3a8a';} },
+      { col:'9lUTyc2rDUOoWCXgOCnn', title:'¿Qué tan probable es que incluyas este producto en tu próxima compra?', type:'purchase_intent', bench:62 },
       { col:'p9kksBPdLJt2xrpRJPsm', title:'¿Cuánto estarías dispuesto a pagar por un Gourmet Soup Royale (1 sobre de 45g)?', type:'price_chart' },
       { col:'mRBy1j329TBmQYpLW3my', title:'¿Recomendarías a un amigo o familiar comprar este producto que has probado con Samplia?', type:'nps', npsLabel:'NPS Gourmet Soup Royale' },
     ];
@@ -880,6 +894,22 @@
       container.innerHTML=html;
     }
 
+    // ── PURCHASE INTENT ──
+    function renderPurchaseIntent(container,arr,q){
+      if(!arr||arr.length===0){container.innerHTML='<div style="font-size:12px;color:var(--txt-3);">Sin datos</div>';return;}
+      const bench=q.bench||52;
+      const isNeg=v=>{const n=norm(v);return n.includes('no lo')||n.includes('no comprare')||n.includes('improbable')||(n.includes('no')&&!n.includes('probable'));};
+      const isNeu=v=>{const n=norm(v);return n.includes('ni ')||n.includes('quizas')||n.includes('indecis')||n.includes('tal vez');};
+      const isPos=v=>!isNeg(v)&&!isNeu(v);
+      const total=arr.length;
+      const posCnt=arr.filter(isPos).length,neuCnt=arr.filter(isNeu).length,negCnt=arr.filter(isNeg).length;
+      const posPct=pct(posCnt,total),neuPct=pct(neuCnt,total),negPct=pct(negCnt,total);
+      const diff=posPct-bench;
+      const cls=diff>0?'up':diff<0?'down':'neutral';
+      const arrow=diff>0?'▲':diff<0?'▼':'—';
+      container.innerHTML=`<div class="nps-wrap"><div class="nps-top-row"><div class="nps-score-card"><div class="nps-score-card-label">Intención de compra</div><div class="nps-score-big">${posPct}%</div><div class="nps-score-label">Sí incluirían el producto</div></div><div class="nps-minicards"><div class="nps-minicard"><div class="nps-minicard-label">Sí compraría</div><div class="nps-minicard-val" style="color:#1d4ed8;">${posPct}%</div><div class="nps-minicard-sub">${posCnt} resp.</div></div><div class="nps-minicard"><div class="nps-minicard-label">Indeciso/a</div><div class="nps-minicard-val" style="color:var(--txt-3);">${neuPct}%</div><div class="nps-minicard-sub">${neuCnt} resp.</div></div><div class="nps-minicard"><div class="nps-minicard-label">No compraría</div><div class="nps-minicard-val" style="color:#991b1b;">${negPct}%</div><div class="nps-minicard-sub">${negCnt} resp.</div></div></div></div><div><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><div style="font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--txt-3);">Distribución de respuestas</div><div class="bench-tag ${cls}" style="font-size:9px;">${arrow} ${posPct}% vs benchmark ${bench}%</div></div><div style="position:relative;margin-top:20px;"><div class="nps-bar-track"><div class="nps-bar-seg" style="width:${negPct}%;background:#991b1b;"></div><div class="nps-bar-seg" style="width:${neuPct}%;background:#9ca3af;"></div><div class="nps-bar-seg" style="flex:1;background:#1d4ed8;"></div></div><div style="position:absolute;top:-4px;bottom:-4px;left:${100-bench}%;width:2px;background:#f59e0b;border-radius:2px;"></div><div style="position:absolute;top:-18px;left:${100-bench}%;transform:translateX(-50%);font-size:9px;font-weight:700;color:#f59e0b;white-space:nowrap;">${bench}% ref.</div></div><div class="nps-bar-labels"><div class="nps-bar-lbl"><span class="nps-bar-lbl-pct">${negPct}%</span>No compraría</div><div class="nps-bar-lbl" style="text-align:center;"><span class="nps-bar-lbl-pct">${neuPct}%</span>Indecisos</div><div class="nps-bar-lbl" style="text-align:right;"><span class="nps-bar-lbl-pct">${posPct}%</span>Sí compraría</div></div></div></div>`;
+    }
+
     // ── NPS ──
     function renderNPS(container,arr,q){
       const groups={'Promotor':0,'Pasivo':0,'Detractor':0};
@@ -899,7 +929,7 @@
       let pairRow=null;
       function cardHTML(q,chartId){
         const headerHTML=`<div class="card-header"><div class="card-label">Pregunta</div><h3 class="card-question">${q.title||''}</h3></div>`;
-        if(q.type==='stacked_var'||q.type==='waffle'||q.type==='leaderboard_top3'||q.type==='nps'||q.type==='cross_heatmap')
+        if(q.type==='stacked_var'||q.type==='waffle'||q.type==='leaderboard_top3'||q.type==='nps'||q.type==='cross_heatmap'||q.type==='purchase_intent')
           return`<div class="card"><div class="card-inner">${headerHTML}<div id="${chartId}"></div></div></div>`;
         if(q.type==='price_chart')
           return`<div class="card"><div class="card-inner"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px;">${headerHTML}<div id="${chartId}_mode" style="flex-shrink:0;"></div></div><div class="chart-wrap h220"><canvas id="${chartId}"></canvas></div></div></div>`;
@@ -973,7 +1003,11 @@
       const idxCompra=getIdx('9lUTyc2rDUOoWCXgOCnn');
       const compraArr=getColData(rows,idxCompra);
       const siCompra=compraArr.filter(v=>{const n=norm(v);if(n.includes('ni ')||n.includes('quizas')||n.includes('indecis')||n.includes('tal vez'))return false;if(n.includes('no lo')||n.includes('no comprare')||n.includes('improbable')||(n.includes('no')&&!n.includes('probable')))return false;return true;}).length;
-      document.getElementById('kpiCompra').textContent=compraArr.length>0?pct(siCompra,compraArr.length)+'%':'—';
+      const compraBench=62;
+      const compraPct=compraArr.length>0?pct(siCompra,compraArr.length):null;
+      document.getElementById('kpiCompra').textContent=compraPct!==null?compraPct+'%':'—';
+      const compraBenchEl=document.getElementById('kpiCompraBench');
+      if(compraPct!==null){const d=compraPct-compraBench;const cls=d>0?'up':d<0?'down':'neutral';const arrow=d>0?'▲':d<0?'▼':'—';compraBenchEl.innerHTML=`<div class="bench-tag ${cls}">${arrow} ${d>0?'+':''}${d}pp vs ${compraBench}%</div>`;}else{compraBenchEl.innerHTML='';}
 
       // KPI: Nivel de agrado - Top 2 Box from laWwwvyDHybnAYfCA8xn
       const idxGustado=getIdx('laWwwvyDHybnAYfCA8xn');
@@ -994,9 +1028,7 @@
       if(npsTot>0){
         const npsVal=pct(npsGroups['Promotor'],npsTot)-pct(npsGroups['Detractor'],npsTot);
         npsEl.textContent=(npsVal>0?'+':'')+npsVal;
-        const npsNums=npsArr.map(v=>parseFloat(v)).filter(v=>!isNaN(v));
-        const npsAvg=npsNums.length>0?(npsNums.reduce((a,b)=>a+b,0)/npsNums.length):0;
-        if(npsNums.length>0){const diff=npsAvg-BENCH_NPS;const cls=diff>0?'up':diff<0?'down':'neutral';const arrow=diff>0?'▲':diff<0?'▼':'—';npsBenchEl.innerHTML=`<div class="bench-tag ${cls}">${arrow} Media ${npsAvg.toFixed(1)} vs ${BENCH_NPS}</div>`;}
+        const diff=npsVal-BENCH_NPS;const cls=diff>0?'up':diff<0?'down':'neutral';const arrow=diff>0?'▲':diff<0?'▼':'—';npsBenchEl.innerHTML=`<div class="bench-tag ${cls}">${arrow} NPS ${npsVal>0?'+':''}${npsVal} vs ${BENCH_NPS}</div>`;
       } else {npsEl.textContent='—';npsBenchEl.innerHTML='';}
 
       // Gender chart
@@ -1031,6 +1063,7 @@
         if(q.type==='waffle'){renderWaffle(el,arr);return;}
         if(q.type==='cross_heatmap'){renderCrossHeatmap(el,rows,getIdx(q.col),getIdx(q.crossCol));return;}
         if(q.type==='nps'){renderNPS(el,arr,q);return;}
+        if(q.type==='purchase_intent'){renderPurchaseIntent(el,arr,q);return;}
         if(q.type==='leaderboard_top3'){
           const topN=!q.showAllResponses?3:null;
           renderLeaderboard(el,arr,topN,'Top respuestas',q.showAllResponses?arr.length:20,!!q.showPercentages);
@@ -1043,7 +1076,7 @@
           if(entries.length===0)return;
           const mode=Object.entries(counts).reduce((best,cur)=>cur[1]>best[1]?cur:best,Object.entries(counts)[0]);
           const modeEl=document.getElementById(chartId+'_mode');
-          if(modeEl)modeEl.innerHTML=`<div class="price-mode-badge"><span class="price-mode-label">Valor percibido:</span><span class="price-mode-value">${mode[0]}</span><span class="price-mode-share"> · ${pct(mode[1],arr.length)}%</span></div>`;
+          if(modeEl)modeEl.innerHTML=`<div class="price-mode-badge"><span class="price-mode-label">Valor percibido:</span><span class="price-mode-value">${mode[0]}</span></div>`;
           // Group into 5 buckets
           const nums=entries.map(e=>priceOrder(e[0]));
           const minP=Math.min(...nums);const maxP=Math.max(...nums);
@@ -1082,7 +1115,7 @@
             const t2bCount=arr.filter(v=>{const n=norm(v);return!n.includes('ni')&&!n.includes('disgust')&&n.includes('gust');}).length;
             const t2bPct=Math.round(t2bCount/arr.length*100);
             const cardInner=document.getElementById(chartId)?.closest('.card-inner');
-            if(cardInner){const b=document.createElement('div');b.className='t2b-badge';b.innerHTML=`<span class="t2b-label">Top 2 Box</span><span class="t2b-value">${t2bPct}%</span>`;cardInner.appendChild(b);}
+            if(cardInner){cardInner.querySelectorAll('.t2b-badge').forEach(el=>el.remove());const b=document.createElement('div');b.className='t2b-badge';b.innerHTML=`<span class="t2b-label">Top 2 Box</span><span class="t2b-value">${t2bPct}%</span>`;cardInner.appendChild(b);}
           }
           return;
         }
