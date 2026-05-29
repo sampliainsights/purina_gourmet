@@ -235,9 +235,14 @@
     /* uses regular chart styles */
 
     /* ── TOP 2 BOX BADGE ── */
-    .t2b-badge { position:absolute; bottom:16px; right:16px; display:inline-flex; align-items:baseline; gap:6px; background:rgba(30,58,138,.08); border:1px solid rgba(30,58,138,.2); border-radius:var(--r-full); padding:5px 10px; pointer-events:none }
+    .t2b-badge { position:absolute; bottom:16px; right:16px; display:inline-flex; align-items:baseline; gap:6px; background:rgba(30,58,138,.08); border:1px solid rgba(30,58,138,.2); border-radius:var(--r-full); padding:5px 10px; pointer-events:none; flex-wrap:wrap; max-width:calc(100% - 32px) }
     .t2b-label { font-size:9px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:rgba(30,58,138,.6) }
     .t2b-value { font-size:13px; font-weight:800; color:#1e3a8a }
+    .t2b-bench { font-size:10px; font-weight:700; color:rgba(30,58,138,.65) }
+    .t2b-diff { font-size:10px; font-weight:800; padding:1px 6px; border-radius:var(--r-full) }
+    .t2b-diff.up { color:var(--green); background:var(--green-bg) }
+    .t2b-diff.down { color:var(--red); background:var(--red-bg) }
+    .t2b-diff.neutral { color:var(--txt-3); background:var(--bg-input) }
 
     /* ── PRICE CHART ── */
     .price-mode-badge { display:inline-flex; align-items:baseline; gap:8px; background:rgba(30,58,138,.08); color:#1e3a8a; border:1px solid rgba(30,58,138,.2); border-radius:var(--r-full); padding:6px 12px; font-size:11px; font-weight:700; white-space:nowrap }
@@ -679,6 +684,13 @@
     const PUBHTML_URL= `https://docs.google.com/spreadsheets/d/e/${GSHEET_PUB_KEY}/pubhtml?gid=${GSHEET_GID}&single=true`;
     const BENCH_SCORE = 7.5;
     const BENCH_NPS   = 22;
+    const T2B_BENCH_GUSTADO = 75;
+    const GUSTADO_COL = 'G';
+    const MARCAS_COL = 'J';
+    const COMPRA_LUGAR_COL = 'M';
+    const COLUMN_ALIASES = {
+      laWwwvyDHybnAYfCA8xn: GUSTADO_COL
+    };
 
     let allRows=[], allHeaders=[], charts={}, COL={};
 
@@ -693,9 +705,9 @@
       { col:'TK3YApcZRVqkgwDW4DVH', title:'¿Qué variedad de Gourmet Soup Royale has recogido gratis con Samplia?', type:'stacked_var' },
       { col:'sgyqhWi9aOK7GxDKLgcL', title:'Antes de obtener la muestra, ¿Conocías este producto que has probado con Samplia?', type:'hbar', hideXAxis:true, pairStart:true },
       { col:'OzlT0zXZmLxZE4lwSZaV', title:'¿Con qué frecuencia das comida húmeda a tu gato?', type:'hbar', hideXAxis:true, pairEnd:true },
-      { col:'aQkeqxXPqHaJBHSavnbQ', title:'¿Qué marcas de comida húmeda sueles comprarle?', type:'leaderboard_top3', showAllResponses:true, showPercentages:true },
-      { col:'0MhGFlaVgBd5WEwd5AOK', title:'¿Dónde sueles comprar la comida húmeda?', type:'cross_heatmap', crossCol:'aQkeqxXPqHaJBHSavnbQ' },
-      { col:'laWwwvyDHybnAYfCA8xn', title:'En general ¿Cuánto crees que le ha gustado Gourmet Soup Royale a tu gato?', type:'hbar', hideXAxis:true, pairStart:true, t2b:true, colorFn:(l)=>{const n=norm(l);if(n.includes('ni'))return'#9ca3af';if(n.includes('disgust')&&n.includes('mucho'))return'#7f1d1d';if(n.includes('disgust'))return'#7f1d1d';if(n.includes('gust')&&n.includes('mucho'))return'#1e3a8a';if(n.includes('gust'))return'#1e3a8a';return'#9ca3af';}, sortFn:(a,b)=>{function rank(l){const n=norm(l);if(n.includes('gust')&&n.includes('mucho'))return 0;if(n.includes('gust'))return 1;if(n.includes('ni'))return 2;if(n.includes('disgust')&&!n.includes('mucho'))return 3;return 4;}return rank(a)-rank(b);} },
+      { col:MARCAS_COL, title:'¿Qué marcas de comida húmeda sueles comprarle?', type:'leaderboard_top3', showAllResponses:true, showPercentages:true, splitMulti:true },
+      { col:COMPRA_LUGAR_COL, title:'¿Dónde sueles comprar la comida húmeda?', type:'cross_heatmap', crossCol:MARCAS_COL },
+      { col:GUSTADO_COL, title:'En general ¿Cuánto crees que le ha gustado Gourmet Soup Royale a tu gato?', type:'hbar', hideXAxis:true, t2b:true, colorFn:(l)=>{const n=norm(l);if(n.includes('ni'))return'#9ca3af';if(n.includes('disgust')&&n.includes('mucho'))return'#7f1d1d';if(n.includes('disgust'))return'#7f1d1d';if(n.includes('gust')&&n.includes('mucho'))return'#1e3a8a';if(n.includes('gust'))return'#1e3a8a';return'#9ca3af';}, sortFn:(a,b)=>{function rank(l){const n=norm(l);if(n.includes('gust')&&n.includes('mucho'))return 0;if(n.includes('gust'))return 1;if(n.includes('ni'))return 2;if(n.includes('disgust')&&!n.includes('mucho'))return 3;return 4;}return rank(a)-rank(b);} },
       { col:'9lUTyc2rDUOoWCXgOCnn', title:'¿Qué tan probable es que incluyas este producto en tu próxima compra?', type:'purchase_intent', bench:62 },
       { col:'p9kksBPdLJt2xrpRJPsm', title:'¿Cuánto estarías dispuesto a pagar por un Gourmet Soup Royale (1 sobre de 45g)?', type:'price_chart' },
       { col:'mRBy1j329TBmQYpLW3my', title:'¿Recomendarías a un amigo o familiar comprar este producto que has probado con Samplia?', type:'nps', npsLabel:'NPS Gourmet Soup Royale' },
@@ -737,7 +749,20 @@
       const m=l.match(/[\d]+[,.]?[\d]*/);if(!m)return 0;
       return parseFloat(m[0].replace(',','.'));
     }
-    function getIdx(colId){return COL[colId]!==undefined?COL[colId]:-1;}
+    function a1ColToIdx(ref){
+      const s=(ref||'').toString().trim().toUpperCase();
+      if(!/^[A-Z]+$/.test(s))return -1;
+      let n=0;for(const ch of s)n=n*26+(ch.charCodeAt(0)-64);
+      return n-1;
+    }
+    function getIdx(colId){
+      if(Number.isInteger(colId))return colId;
+      if(COLUMN_ALIASES[colId]!==undefined)return getIdx(COLUMN_ALIASES[colId]);
+      if(COL[colId]!==undefined)return COL[colId];
+      const a1Idx=a1ColToIdx(colId);
+      if(a1Idx>=0)return a1Idx;
+      return -1;
+    }
 
     // ── CHART COLOR HELPER ──
     function getChartColors(){
@@ -893,6 +918,10 @@
       if(rest.length>0&&!topN)html+=`<div class="lb-rest-header">Otras respuestas</div><div class="leaderboard">${rest.map((e,i)=>buildItem(e,i,false)).join('')}</div>`;
       container.innerHTML=html;
     }
+    function renderMultiLeaderboard(container,arr,topN=null,title='',maxEntries=20,showPercentages=false){
+      const flat=arr.flatMap(splitMulti);
+      renderLeaderboard(container,flat,topN,title,maxEntries,showPercentages);
+    }
 
     // ── PURCHASE INTENT ──
     function renderPurchaseIntent(container,arr,q){
@@ -1009,13 +1038,14 @@
       const compraBenchEl=document.getElementById('kpiCompraBench');
       if(compraPct!==null){const d=compraPct-compraBench;const cls=d>0?'up':d<0?'down':'neutral';const arrow=d>0?'▲':d<0?'▼':'—';compraBenchEl.innerHTML=`<div class="bench-tag ${cls}">${arrow} ${d>0?'+':''}${d}pp vs ${compraBench}%</div>`;}else{compraBenchEl.innerHTML='';}
 
-      // KPI: Nivel de agrado - Top 2 Box from laWwwvyDHybnAYfCA8xn
-      const idxGustado=getIdx('laWwwvyDHybnAYfCA8xn');
+      // KPI: Nivel de agrado - Top 2 Box from column G
+      const idxGustado=getIdx(GUSTADO_COL);
       const gustadoArr=getColData(rows,idxGustado);
       const t2bCount=gustadoArr.filter(v=>{const n=norm(v);return!n.includes('ni')&&!n.includes('disgust')&&n.includes('gust');}).length;
       const t2bPct=gustadoArr.length>0?pct(t2bCount,gustadoArr.length):0;
       document.getElementById('kpiScore').textContent=gustadoArr.length>0?t2bPct+'%':'—';
-      document.getElementById('kpiBenchScore').innerHTML='';
+      const kpiBenchScoreEl=document.getElementById('kpiBenchScore');
+      if(gustadoArr.length>0){const d=t2bPct-T2B_BENCH_GUSTADO;const cls=d>0?'up':d<0?'down':'neutral';const arrow=d>0?'▲':d<0?'▼':'—';kpiBenchScoreEl.innerHTML=`<div class="bench-tag ${cls}">${arrow} ${d>0?'+':''}${d}pp vs ${T2B_BENCH_GUSTADO}%</div>`;}else{kpiBenchScoreEl.innerHTML='';}
 
       // KPI: NPS - mRBy1j329TBmQYpLW3my
       const idxNPS=getIdx('mRBy1j329TBmQYpLW3my');
@@ -1066,7 +1096,8 @@
         if(q.type==='purchase_intent'){renderPurchaseIntent(el,arr,q);return;}
         if(q.type==='leaderboard_top3'){
           const topN=!q.showAllResponses?3:null;
-          renderLeaderboard(el,arr,topN,'Top respuestas',q.showAllResponses?arr.length:20,!!q.showPercentages);
+          if(q.splitMulti)renderMultiLeaderboard(el,arr,topN,'Top respuestas',q.showAllResponses?arr.length:20,!!q.showPercentages);
+          else renderLeaderboard(el,arr,topN,'Top respuestas',q.showAllResponses?arr.length:20,!!q.showPercentages);
           return;
         }
         if(q.type==='leaderboard'){renderLeaderboard(el,arr,null,'Ranking de respuestas',20,true);return;}
@@ -1114,8 +1145,11 @@
           if(q.t2b&&arr.length>0){
             const t2bCount=arr.filter(v=>{const n=norm(v);return!n.includes('ni')&&!n.includes('disgust')&&n.includes('gust');}).length;
             const t2bPct=Math.round(t2bCount/arr.length*100);
+            const t2bDiff=t2bPct-T2B_BENCH_GUSTADO;
+            const t2bDiffCls=t2bDiff>0?'up':t2bDiff<0?'down':'neutral';
+            const t2bDiffLabel=`${t2bDiff>0?'+':''}${t2bDiff}pp`;
             const cardInner=document.getElementById(chartId)?.closest('.card-inner');
-            if(cardInner){cardInner.querySelectorAll('.t2b-badge').forEach(el=>el.remove());const b=document.createElement('div');b.className='t2b-badge';b.innerHTML=`<span class="t2b-label">Top 2 Box</span><span class="t2b-value">${t2bPct}%</span>`;cardInner.appendChild(b);}
+            if(cardInner){cardInner.querySelectorAll('.t2b-badge').forEach(el=>el.remove());const b=document.createElement('div');b.className='t2b-badge';b.innerHTML=`<span class="t2b-label">Top 2 Box</span><span class="t2b-value">${t2bPct}%</span><span class="t2b-bench">vs ${T2B_BENCH_GUSTADO}% benchmark</span><span class="t2b-diff ${t2bDiffCls}">${t2bDiffLabel}</span>`;cardInner.appendChild(b);}
           }
           return;
         }
@@ -1151,8 +1185,8 @@
       const pCompra=compraArr.length>0?pct(siCompra,compraArr.length):0;
       insights.push({icon:'<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>',title:'Sólida intención de recompra',body:`<strong>${pCompra}%</strong> de los participantes son Compradores Potenciales que incluirían Gourmet Soup Royale en su próxima compra, demostrando un potente efecto de conversión del sampling a venta real. Esta cifra es especialmente significativa en la categoría de comida húmeda premium para gatos.`});
 
-      // 2. Nivel de agrado — Top 2 Box de laWwwvyDHybnAYfCA8xn
-      const idxGustado=getIdx('laWwwvyDHybnAYfCA8xn');
+      // 2. Nivel de agrado — Top 2 Box de la columna G
+      const idxGustado=getIdx(GUSTADO_COL);
       const gustadoArr=getColData(rows,idxGustado);
       const t2bCount=gustadoArr.filter(v=>{const n=norm(v);return!n.includes('ni')&&!n.includes('disgust')&&n.includes('gust');}).length;
       const t2bPct=gustadoArr.length>0?pct(t2bCount,gustadoArr.length):0;
